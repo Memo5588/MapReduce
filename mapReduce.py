@@ -2,6 +2,7 @@
 import csv
 from collections import defaultdict
 import heapq
+import multiprocessing
 
 # Data preprocessing phase - the provided file is read and processed to extract passenger IDs.
 def preprocess_data(file_path):
@@ -30,10 +31,10 @@ def mapper(data):
     return mapped_result.items()
 
 # Shuffle Phase - redistributes the intermediate key-value pairs to prepare them for the reduce phase.
-def shuffle(mapped_result):
+def shuffle(mapped_result, num_reducers):
     shuffled_result = defaultdict(list)
     for key, value in mapped_result:
-        hashed_key = hash(key) % 10  # Assuming 10 reducers for simplicity
+        hashed_key = hash(key) % num_reducers
         shuffled_result[hashed_key].append((key, value))
     return shuffled_result.items()
 
@@ -59,8 +60,12 @@ if __name__ == "__main__":
         # Map Phase
         mapped_result = mapper(flight_data)
         
+        # Determine the number of reducers based on available CPU cores
+        num_cores = multiprocessing.cpu_count()
+        num_reducers = max(1, num_cores - 1)  # Use all cores except one for reducers
+        
         # Shuffle Phase
-        shuffled_result = shuffle(mapped_result)
+        shuffled_result = shuffle(mapped_result, num_reducers)
         
         # Reduce Phase
         reduced_result = reducer(shuffled_result)
