@@ -3,15 +3,23 @@ import csv
 from collections import defaultdict
 import heapq
 
-# Data preprocessing phase  - the provided file is read and processed to extract passenger IDs.
+# Data preprocessing phase - the provided file is read and processed to extract passenger IDs.
 def preprocess_data(file_path):
     processed_data = []
-    with open(file_path, 'r') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            # Assuming the data format is consistent with provided instructions
-            passenger_id = row[0]
-            processed_data.append(passenger_id)
+    try:
+        with open(file_path, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if len(row) < 1:
+                    raise ValueError("Invalid data format: Empty row detected.")
+                passenger_id = row[0]
+                if not passenger_id or not passenger_id.strip():
+                    raise ValueError("Invalid data format: Empty passenger ID detected.")
+                processed_data.append(passenger_id)
+    except FileNotFoundError:
+        print("File not found.")
+    except Exception as e:
+        print(f"Error occurred during data preprocessing: {str(e)}")
     return processed_data
 
 # Map Phase - the data is processed to generate intermediate key-value pairs.
@@ -47,14 +55,15 @@ if __name__ == "__main__":
     # Data preprocessing
     flight_data = preprocess_data("AComp_Passenger_data_no_error.csv")
     
-    # Map Phase
-    mapped_result = mapper(flight_data)
-    
-    # Shuffle Phase
-    shuffled_result = shuffle(mapped_result)
-    
-    # Reduce Phase
-    reduced_result = reducer(shuffled_result)
-    
-    # Output formatting
-    format_output(reduced_result)
+    if flight_data:
+        # Map Phase
+        mapped_result = mapper(flight_data)
+        
+        # Shuffle Phase
+        shuffled_result = shuffle(mapped_result)
+        
+        # Reduce Phase
+        reduced_result = reducer(shuffled_result)
+        
+        # Output formatting
+        format_output(reduced_result)
